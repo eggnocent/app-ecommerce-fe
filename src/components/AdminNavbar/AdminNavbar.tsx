@@ -1,6 +1,31 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../store/auth';
+import Swal from 'sweetalert2';
+import { getAuthClient } from '../../api/grpc/client';
 
 function AdminNavbar() {
+    const navigate = useNavigate();
+    const logout = useAuthStore(state => state.logout)
+    const logoutHandler = async () => {
+    
+            const result = await Swal.fire({
+                title:'yakin ingin logout?',
+                showCancelButton: true,
+                cancelButtonText:'tidak',
+                confirmButtonText: 'iya'
+            });
+    
+            if (result.isConfirmed) {
+                const res = await getAuthClient().logout({});
+    
+                if (!res.response.base?.isError) {
+                    logout();
+                    localStorage.removeItem('access_token')
+                    navigate('/')
+                }
+            }
+            
+        }
     return (
         <nav className="custom-navbar navbar navbar-expand-md navbar-dark bg-dark" aria-label="Admin navigation bar">
             <div className="container">
@@ -18,7 +43,7 @@ function AdminNavbar() {
                         <li className="nav-item">
                             <button
                                 className="nav-link border-0 bg-transparent"
-                                onClick={() => console.log('Logout clicked')}
+                                onClick={logoutHandler}
                             >
                                 <img src="/images/sign-out.svg" alt="Logout" />
                             </button>

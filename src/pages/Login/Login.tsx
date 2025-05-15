@@ -6,6 +6,7 @@ import * as yup from 'yup';
 import FormInput from '../../components/FormInput/FormInput';
 import { RpcError } from '@protobuf-ts/runtime-rpc';
 import { getAuthClient } from '../../api/grpc/client';
+import { useAuthStore } from '../../store/auth';
 
 const loginSchema = yup.object().shape({
   email: yup.string().email('Email tidak valid').required('Email wajib diisi'),
@@ -18,7 +19,8 @@ interface LoginFormValues {
 }
 
 const Login = () => {
-    const navigate = useNavigate()
+  const navigate = useNavigate();
+  const loginUser = useAuthStore(state => state.login);
   const form = useForm<LoginFormValues>({
     resolver: yupResolver(loginSchema),
   });
@@ -43,13 +45,21 @@ const Login = () => {
       }
 
       localStorage.setItem('access_token', res.response.accessToken);
+      
+      loginUser(res.response.accessToken);
 
-      await Swal.fire({
+      // jika admin navigate kan ke dashboard admin
+
+      Swal.fire({
         icon: 'success',
         title: 'Login Sukses',
         confirmButtonText: 'Ok',
       });
-      navigate('/')
+      if (useAuthStore.getState().role === 'admin') {
+        navigate('/admin/dashboard')
+      } else {
+            navigate('/')
+      }
     } catch (e) {
       if (e instanceof RpcError) {
         if (e.code === 'UNAUTHENTICATED') {

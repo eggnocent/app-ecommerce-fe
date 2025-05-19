@@ -2,8 +2,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth';
 import { getAuthClient } from '../../api/grpc/client';
 import Swal from 'sweetalert2';
+import UseGrpcApi from '../../hooks/useGrpcAPI';
 
 function Navbar() {
+    const logoutApi = UseGrpcApi();
     const navigate = useNavigate();
     const isLoggedIn = useAuthStore(state => state.isLoggedIn)
     const logout = useAuthStore(state => state.logout)
@@ -27,13 +29,11 @@ function Navbar() {
         });
 
         if (result.isConfirmed) {
-            const res = await getAuthClient().logout({});
+            await logoutApi.callApi(getAuthClient().logout({}))
 
-            if (!res.response.base?.isError) {
-                logout();
-                localStorage.removeItem('access_token')
-                navigate('/')
-            }
+            logout();
+            localStorage.removeItem('access_token')
+            navigate('/')   
         }
         
     }

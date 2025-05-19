@@ -2,11 +2,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth';
 import Swal from 'sweetalert2';
 import { getAuthClient } from '../../api/grpc/client';
+import UseGrpcApi from '../../hooks/useGrpcAPI';
 
 function AdminNavbar() {
+    const logoutApi = UseGrpcApi();
     const navigate = useNavigate();
     const logout = useAuthStore(state => state.logout)
     const logoutHandler = async () => {
+
     
             const result = await Swal.fire({
                 title:'yakin ingin logout?',
@@ -16,13 +19,11 @@ function AdminNavbar() {
             });
     
             if (result.isConfirmed) {
-                const res = await getAuthClient().logout({});
-    
-                if (!res.response.base?.isError) {
-                    logout();
-                    localStorage.removeItem('access_token')
-                    navigate('/')
-                }
+                await logoutApi.callApi(getAuthClient().logout({}))
+
+                logout();
+                localStorage.removeItem('access_token')
+                navigate('/')
             }
             
         }

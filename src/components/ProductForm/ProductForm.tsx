@@ -2,11 +2,12 @@ import { useForm } from "react-hook-form";
 import FormInput from "../FormInput/FormInput";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
+import CurrencyInput from "../Currency Input/CurrencyInput";
 
 
 const createProductSchema = yup.object().shape({
     name: yup.string().required("nama produk wajib diisi"),
-    // price: yup.number().required("harga produk wajib diisi").typeError("harga produk tidak valid").moreThan(0, "harga produk harus lebih dari 0"),
+    price: yup.number().required("harga produk wajib diisi").typeError("harga produk tidak valid").moreThan(0, "harga produk harus lebih dari 0"),
     description: yup.string(),
     image: yup.mixed<FileList>().required("gambar produk wajib diisi")
     .test("fileLength", "gambar produk wajib diisi", (FileList) => {
@@ -20,7 +21,7 @@ const createProductSchema = yup.object().shape({
 
 interface ProductFormValues{
     name: string;
-    // price: number;
+    price: number;
     description?: string;
     image: FileList;
 }
@@ -48,10 +49,14 @@ function ProductForm() {
                 
                 />
 
-            <div className="form-group mb-3">
-                <label className="text-black" htmlFor="product_price">Harga <span className="text-danger">*</span></label>
-                <input type="number" className="form-control" id="product_price" placeholder="Harga Produk" />
-            </div>
+                <CurrencyInput<ProductFormValues>
+                    errors={form.formState.errors}
+                    name="price"
+                    control={form.control}
+                    label="Harga"
+                    placeholder="harga produk"
+                    labelRequired
+                />
 
             <FormInput<ProductFormValues>
                     errors={form.formState.errors}

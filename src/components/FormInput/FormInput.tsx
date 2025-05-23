@@ -11,7 +11,7 @@ interface FormInputProps<T extends Record<string, any>> {
     register: UseFormRegister<T>;
     name: Path<T>;
     errors: FieldErrors<T>
-    disabled: boolean;
+    disabled?: boolean;
     label?: string;
     labelRequired?: boolean;
 }

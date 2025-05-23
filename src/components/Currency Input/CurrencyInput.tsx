@@ -11,7 +11,7 @@ interface CurrencyInputProps<T extends Record<string, any>> {
     control: Control<T>;
     name: Path<T>;
     errors: FieldErrors<T>
-    disabled: boolean;
+    disabled?: boolean;
     label?: string;
     labelRequired?: boolean;
 }

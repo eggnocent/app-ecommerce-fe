@@ -3,4 +3,5 @@ export interface ProductFormValues{
     price: number;
     description?: string;
     image: FileList;
+    imageUrl?: string;
 }

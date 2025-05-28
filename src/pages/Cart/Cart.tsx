@@ -18,29 +18,39 @@ interface CartItem {
 
 function Cart() {
     const listApi = UseGrpcApi();
+    const deleteApi = UseGrpcApi();
     const [items, setItems] = useState<CartItem[]>([]);
     const [totalPrice, setTotalPrice] = useState<number>(0); 
 
+
+    const fetchData = async () => {
+        const resp = await listApi.callApi(getCartClient().listCart({}));
+
+
+        const newItems = (resp.response.items.map<CartItem>(item => ({
+            id: item.cartId,
+            product_id: item.productId,
+            product_image_url: item.productImageUrl,
+            product_name: item.productName,
+            product_price: Number(item.productPrice),
+            quantity: Number(item.quantity),
+            total: item.productPrice * Number(item.quantity),
+        })))
+        setItems(newItems);
+
+        setTotalPrice(newItems.reduce<number>((currentValue, item) => currentValue + item.total, 0));
+    }
+
     useEffect(() => {
-        const fetchData = async () => {
-            const resp = await listApi.callApi(getCartClient().listCart({}));
-
-
-            const newItems = (resp.response.items.map<CartItem>(item => ({
-                id: item.cartId,
-                product_id: item.productId,
-                product_image_url: item.productImageUrl,
-                product_name: item.productName,
-                product_price: Number(item.productPrice),
-                quantity: Number(item.quantity),
-                total: item.productPrice * Number(item.quantity),
-            })))
-            setItems(newItems);
-
-            setTotalPrice(newItems.reduce<number>((currentValue, item) => currentValue + item.total, 0));
-        }
         fetchData();
-    }, [])
+    }, []);
+
+    const deleteCartItemHandler = async (cartID: string) => {
+        await deleteApi.callApi(getCartClient().deleteCart({
+            cartId: cartID,
+        }));
+        await fetchData();
+    }
 
     return (
         <>
@@ -48,50 +58,59 @@ function Cart() {
 
             <div className="untree_co-section before-footer-section">
                 <div className="container">
-                    <div className="row mb-5">
-                            <div className="site-blocks-table">
-                                <table className="table">
-                                    <thead>
-                                        <tr>
-                                            <th className="product-thumbnail">Gambar</th>
-                                            <th className="product-name">Produk</th>
-                                            <th className="product-price">Harga</th>
-                                            <th className="product-quantity">Kuantitas</th>
-                                            <th className="product-total">Total</th>
-                                            <th className="product-remove">Hapus</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-
-                                    {items.map(item => (
-                                        <tr key={item.id}>
-                                        <td className="product-thumbnail">
-                                            <img src={item.product_image_url} alt="Image" className="img-fluid" />
-                                        </td>
-                                        <td className="product-name">
-                                            <h2 className="h5 text-black">{item.product_name}</h2>
-                                        </td>
-                                        <td>{formatToIDR(item.product_price)}</td>
-                                        <td>
-                                            <div className="input-group mb-3 d-flex align-items-center quantity-container" style={{ maxWidth: 120 }}>
-                                                <div className="input-group-prepend">
-                                                    <button className="btn btn-outline-black decrease" type="button">-</button>
-                                                </div>
-                                                <input type="text" className="form-control text-center quantity-amount" value={item.quantity} disabled/>
-                                                <div className="input-group-append">
-                                                    <button className="btn btn-outline-black increase" type="button">+</button>
-                                                </div>
-                                            </div>
-
-                                        </td>
-                                        <td>{formatToIDR(item.total)}</td>
-                                        <td><a href="#" className="btn btn-black btn-sm">X</a></td>
+                    {items.length > 0 &&
+                        <div className="row mb-5">
+                        <div className="site-blocks-table">
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th className="product-thumbnail">Gambar</th>
+                                        <th className="product-name">Produk</th>
+                                        <th className="product-price">Harga</th>
+                                        <th className="product-quantity">Kuantitas</th>
+                                        <th className="product-total">Total</th>
+                                        <th className="product-remove">Hapus</th>
                                     </tr>
-                                    ) )}
-                                    </tbody>
-                                </table>
-                            </div>
-                    </div>
+                                </thead>
+                                <tbody>
+
+                                {items.map(item => (
+                                    <tr key={item.id}>
+                                    <td className="product-thumbnail">
+                                        <img src={item.product_image_url} alt="Image" className="img-fluid" />
+                                    </td>
+                                    <td className="product-name">
+                                        <h2 className="h5 text-black">{item.product_name}</h2>
+                                    </td>
+                                    <td>{formatToIDR(item.product_price)}</td>
+                                    <td>
+                                        <div className="input-group mb-3 d-flex align-items-center quantity-container" style={{ maxWidth: 120 }}>
+                                            <div className="input-group-prepend">
+                                                <button className="btn btn-outline-black decrease" type="button">-</button>
+                                            </div>
+                                            <input type="text" className="form-control text-center quantity-amount" value={item.quantity} disabled/>
+                                            <div className="input-group-append">
+                                                <button className="btn btn-outline-black increase" type="button">+</button>
+                                            </div>
+                                        </div>
+
+                                    </td>
+                                    <td>{formatToIDR(item.total)}</td>
+                                    <td>
+                                      <div className="btn btn-black btn-sm" onClick={() => deleteCartItemHandler(item.id)}>
+                                        X
+                                      </div>
+                                    </td>
+                                </tr>
+                                ) )}
+                                </tbody>
+                            </table>
+                        </div>
+                </div>
+            }
+            {items.length === 0 &&
+                <h3 className='text-center text-black mb-5'>Keranjang belanjamu kosong.</h3>
+            }        
 
                     <div className="row">
                         <div className="col-md-6">
@@ -128,9 +147,17 @@ function Cart() {
 
                                     <div className="row">
                                         <div className="col-md-12">
-                                            <Link to="/checkout">
+
+                                            {items.length > 0 &&
+                                                <Link to="/checkout">
                                                 <button className="btn btn-black btn-lg py-3 btn-block">Lanjutkan ke Pembayaran</button>
                                             </Link>
+                                            }
+
+                                            {items.length === 0 &&
+                                                <button className="btn btn-black btn-lg py-3 btn-block" disabled>Lanjutkan ke Pembayaran</button>
+                                            }
+                                            
                                         </div>
                                     </div>
                                 </div>

@@ -2,7 +2,7 @@ import ProductHighlightSection from '../../components/ProductHighlightSection/Pr
 import PlainHeroSection from '../../components/PlainHeroSection/PlainHeroSection'
 import { Link } from 'react-router-dom'
 import UseGrpcApi from '../../hooks/useGrpcAPI'
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getCartClient } from '../../api/grpc/client';
 import { formatToIDR } from '../../util/number';
 
@@ -20,6 +20,7 @@ function Cart() {
     const listApi = UseGrpcApi();
     const deleteApi = UseGrpcApi();
     const updateApi = UseGrpcApi();
+    const timeOutRef = useRef<Record<string, number>>({})
     const [items, setItems] = useState<CartItem[]>([]);
     const [totalPrice, setTotalPrice] = useState<number>(0); 
 
@@ -76,10 +77,15 @@ function Cart() {
             return
         }
 
-        await updateApi.callApi(getCartClient().updateCartQuantity({
-            cartId: cartID,
-            newQuantity: BigInt(newQuantity)
-        }))
+        clearTimeout(timeOutRef.current[cartID]);
+        timeOutRef.current[cartID] =  setTimeout(async () => {
+            await updateApi.callApi(getCartClient().updateCartQuantity({
+                cartId: cartID,
+                newQuantity: BigInt(newQuantity)
+            }))
+        }, 176);
+
+        
     }
 
     return (

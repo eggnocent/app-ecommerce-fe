@@ -1,10 +1,11 @@
 import ProductHighlightSection from '../../components/ProductHighlightSection/ProductHighlightSection'
 import PlainHeroSection from '../../components/PlainHeroSection/PlainHeroSection'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import UseGrpcApi from '../../hooks/useGrpcAPI'
 import { useEffect, useRef, useState } from 'react';
 import { getCartClient } from '../../api/grpc/client';
 import { formatToIDR } from '../../util/number';
+import { CartCheckoutState } from '../../types/cart';
 
 interface CartItem {
     id: string;
@@ -17,6 +18,7 @@ interface CartItem {
 }
 
 function Cart() {
+    const navigate = useNavigate()
     const listApi = UseGrpcApi();
     const deleteApi = UseGrpcApi();
     const updateApi = UseGrpcApi();
@@ -53,6 +55,23 @@ function Cart() {
         await fetchData();
     }
 
+    const checkoutHandler = () => {
+        const checkoutState: CartCheckoutState = {
+            cartIds: items.map(item => item.id),
+            products: items.map(item => ({
+                id: item.product_id,
+                name: item.product_name,
+                price: item.product_price,
+                quantity: item.quantity,
+                total: item.total,
+            })),
+            total: totalPrice
+        }
+        navigate('/checkout', { 
+            state: checkoutState,
+         })
+    }
+
     const updateCartItemHandler = async (cartID: string, action: "increment" | "decrement")  => {
        let newQuantity = 0;
         let newItems =  items.map(item => {
@@ -84,6 +103,8 @@ function Cart() {
                 newQuantity: BigInt(newQuantity)
             }))
         }, 176);
+
+       
 
         
     }
@@ -189,9 +210,10 @@ function Cart() {
                                         <div className="col-md-12">
 
                                             {items.length > 0 &&
-                                                <Link to="/checkout">
-                                                <button className="btn btn-black btn-lg py-3 btn-block">Lanjutkan ke Pembayaran</button>
-                                            </Link>
+                                                <button 
+                                                className="btn btn-black btn-lg py-3 btn-block"
+                                                onClick={checkoutHandler}
+                                                >Lanjutkan ke Pembayaran</button>
                                             }
 
                                             {items.length === 0 &&

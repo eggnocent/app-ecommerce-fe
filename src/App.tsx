@@ -39,7 +39,7 @@ const router = createBrowserRouter([
             { path: 'services', element: <Services /> },
             { path: 'cart', element: <Cart /> },
             { path: 'checkout', element: <Checkout /> },
-            { path: 'checkout/success', element: <CheckoutSuccess /> },
+            { path: 'checkout/:id/success', element: <CheckoutSuccess /> },
             {
                 path: 'profile',
                 element: <Profile />,
@@ -64,6 +64,8 @@ const router = createBrowserRouter([
         path: "/admin",
         element: <AdminLayout />,
         children: [
+            { path: "orders/:id/detail", element: <AdminOrderDetail /> },
+
             {
                 path: '',
                 element: <AdminDashboard />,
@@ -82,7 +84,6 @@ const router = createBrowserRouter([
                     { path: 'change-password', element: <ChangePasswordSection /> },
                 ]
             },
-            { path: "order", element: <AdminOrderDetail /> },
             { path: "products/create", element: <AdminCreateProduct /> },
             { path: "products/:id/edit", element: <AdminEditProduct/> },
         ]
